@@ -1,24 +1,63 @@
-import React, { useState } from "react";
-import { Upload, Shuffle } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Upload, Shuffle, PlusIcon, Minus } from "lucide-react";
 import * as XLSX from "xlsx";
 
 interface Problem {
   problemName: string;
   status: string;
-  solvedCount: number;
+  revisionCount: number;
 }
 
-export default function App() {
+const STORAGE = "problems-data";
+
+export default function LeetCodeTable() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [filteredProblems, setFilteredProblems] = useState<Problem[]>([]);
   const [randomCount, setRandomCount] = useState<number>(1);
   const [isDragging, setIsDragging] = useState(false);
 
-  const generateLeetCodeUrl = (problemName: string): string => {
-    return `https://leetcode.com/problems/${problemName
+  // Load saved data on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE);
+    if (savedData) {
+      const parsed: Problem[] = JSON.parse(savedData);
+      setProblems(parsed);
+      setFilteredProblems(parsed); // load last saved progress
+    }
+  }, []);
+
+  // Persist problems to localStorage whenever it changes
+  useEffect(() => {
+    if (problems.length > 0) {
+      localStorage.setItem(STORAGE, JSON.stringify(problems));
+    }
+  }, [problems]);
+
+  const handleCount = (p: Problem, type: "plus" | "minus") => {
+    setProblems((prev) => {
+      const updated = prev.map((problem) =>
+        problem.problemName === p.problemName
+          ? {
+              ...problem,
+              revisionCount:
+                type === "plus"
+                  ? (problem.revisionCount || 0) + 1
+                  : Math.max((problem.revisionCount || 0) - 1, 0),
+            }
+          : problem
+      );
+
+      // Update filteredProblems based on updated array
+      setFilteredProblems(updated);
+
+      return updated;
+    });
+  };
+
+  const generateLeetCodeUrl = (problemName: string): string =>
+    `https://leetcode.com/problems/${problemName
       .toLowerCase()
       .replace(/\s+/g, "-")}`;
-  };
 
   const handleFile = (file: File) => {
     const reader = new FileReader();
@@ -29,13 +68,20 @@ export default function App() {
       const worksheet = workbook.Sheets[sheetName];
       const json = XLSX.utils.sheet_to_json(worksheet) as never[];
 
-      console.log("Parsed JSON:", json);
-
       const parsedProblems: Problem[] = json.map((row) => ({
-        problemName: row["Problem"] || row["problemName"] || row["name"] || "",
-        status: row["Status"] || row["Solved"] || "",
-        solvedCount: Number(
-          row["Solved Count"] || row["solvedCount"] || row["count"] || 0
+        problemName:
+          row["Problem"] ||
+          row["Problem Name"] ||
+          row["problemName"] ||
+          row["name"] ||
+          "",
+        status: row["Status"] || row["Solved"] || row["status"] || "",
+        revisionCount: Number(
+          row["Revision Count"] ||
+            row["Solved Count"] ||
+            row["revisionCount"] ||
+            row["count"] ||
+            0
         ),
       }));
 
@@ -59,36 +105,26 @@ export default function App() {
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
+  const handleDragLeave = () => setIsDragging(false);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
-    }
+    if (file) handleFile(file);
   };
 
   const handleRandomFilter = () => {
     if (problems.length === 0) return;
-
     const shuffled = [...problems].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, Math.min(randomCount, problems.length));
-    setFilteredProblems(selected);
+    setFilteredProblems(
+      shuffled.slice(0, Math.min(randomCount, problems.length))
+    );
   };
 
-  const handleReset = () => {
-    setFilteredProblems(problems);
-  };
+  const handleReset = () => setFilteredProblems(problems);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-black p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8 text-center">
-          LeetCode Problem Tracker
-        </h1>
-
         {/* Upload Area */}
         <div
           onDrop={handleDrop}
@@ -154,7 +190,7 @@ export default function App() {
 
         {/* Table */}
         {filteredProblems.length > 0 && (
-          <div className="bg-slate-800/70 rounded-xl overflow-hidden shadow-2xl">
+          <div className="bg-slate-800/70 rounded-xl overflow-hidden shadow-2xl max-h-[45vh] overflow-y-auto">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -166,7 +202,7 @@ export default function App() {
                       Status
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
-                      Solved Count
+                      Revision Count
                     </th>
                   </tr>
                 </thead>
@@ -199,8 +235,16 @@ export default function App() {
                           {problem.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-white font-medium">
-                        {problem.solvedCount}
+                      <td className="flex gap-3 px-6 py-4 text-white font-medium">
+                        <Minus
+                          className="cursor-pointer hover:text-red-400"
+                          onClick={() => handleCount(problem, "minus")}
+                        />
+                        {problem.revisionCount}
+                        <PlusIcon
+                          className="cursor-pointer hover:text-green-400"
+                          onClick={() => handleCount(problem, "plus")}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -214,7 +258,7 @@ export default function App() {
           <div className="text-center text-purple-300 mt-12">
             <p className="text-lg">Upload an Excel file to get started!</p>
             <p className="text-sm mt-2">
-              Expected columns: Problem Name, Status, Solved Count
+              Expected columns: Problem, Status, Revision Count
             </p>
           </div>
         )}
