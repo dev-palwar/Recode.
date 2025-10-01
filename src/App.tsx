@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Shuffle, PlusIcon, Minus } from "lucide-react";
 import { getCurrentDate } from "./utils";
 import problemsJson from "./data/problems.json";
+import Button from "./components/ui/Button";
 
 interface Problem {
   problemName: string;
   status: string;
   revisionCount: number;
   date?: string;
+  href: string;
 }
 
 const STORAGE = "problems-data";
@@ -69,6 +71,11 @@ export default function LeetCodeTable() {
     });
   };
 
+  const handleClearProgress = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const handleRandomFilter = () => {
     if (problems.length === 0) return;
     const shuffled = [...problems].sort(() => Math.random() - 0.5);
@@ -106,19 +113,13 @@ export default function LeetCodeTable() {
                 <option value={3}>3</option>
               </select>
             </div>
-            <button
-              onClick={handleRandomFilter}
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Shuffle className="w-5 h-5" />
-              Random Filter
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-6 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors"
-            >
-              Reset
-            </button>
+
+            <Button onClick={handleRandomFilter}>Random Filter</Button>
+            <Button onClick={handleReset}>Reset</Button>
+            <Button disabledStyle onClick={handleClearProgress}>
+              Clear progress
+            </Button>
+
             <div className="ml-auto text-purple-300">
               Showing {filteredProblems.length} of {problems.length} problems
             </div>
@@ -127,21 +128,21 @@ export default function LeetCodeTable() {
 
         {/* Table */}
         {filteredProblems.length > 0 && (
-          <div className="bg-slate-800/70 rounded-xl overflow-hidden shadow-2xl max-h-[45vh] overflow-y-auto">
+          <div className="bg-slate-800/70 rounded-xl overflow-hidden shadow-2xl max-h-[69vh] overflow-y-auto">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-purple-900/50">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                  <tr className="bg-[#141c2a]">
+                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Problem Name
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Revision Count
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Date
                     </th>
                   </tr>
@@ -154,9 +155,10 @@ export default function LeetCodeTable() {
                     >
                       <td className="px-6 py-4">
                         <a
+                          href={problem.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-purple-400 hover:text-purple-300 hover:underline font-medium transition-colors"
+                          className="text-white cursor-pointer hover:text-purple-300 hover:underline font-medium transition-colors"
                         >
                           {problem.problemName}
                         </a>
