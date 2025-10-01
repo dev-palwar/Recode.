@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Upload, Shuffle, PlusIcon, Minus } from "lucide-react";
 import * as XLSX from "xlsx";
+import { getCurrentDate } from "./utils";
 
 interface Problem {
   problemName: string;
   status: string;
   revisionCount: number;
+  date?: string;
 }
 
 const STORAGE = "problems-data";
@@ -25,23 +27,13 @@ export default function LeetCodeTable() {
     }
   }, []);
 
-  // for saving in local storage
-  // useEffect(() => {
-  //   if (problems.length > 0) {
-  //     const sorted = [...problems].sort(
-  //       (a, b) => a.revisionCount - b.revisionCount
-  //     );
-
-  //     localStorage.setItem(STORAGE, JSON.stringify(sorted));
-  //   }
-  // }, [problems]);
-
   const handleCount = (p: Problem, type: "plus" | "minus") => {
     setProblems((prev) => {
       const updated = prev.map((problem) =>
         problem.problemName === p.problemName
           ? {
               ...problem,
+              date: getCurrentDate(),
               revisionCount:
                 type === "plus"
                   ? (problem.revisionCount || 0) + 1
@@ -64,6 +56,7 @@ export default function LeetCodeTable() {
         val.problemName === p.problemName
           ? {
               ...val,
+              date: type === "plus" ? getCurrentDate() : val.date,
               revisionCount:
                 type === "plus"
                   ? (val.revisionCount || 0) + 1
@@ -234,6 +227,9 @@ export default function LeetCodeTable() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Revision Count
                     </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                      Date
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
@@ -276,6 +272,7 @@ export default function LeetCodeTable() {
                           onClick={() => handleCount(problem, "plus")}
                         />
                       </td>
+                      <td className="text-white font-medium">{problem.date}</td>
                     </tr>
                   ))}
                 </tbody>
