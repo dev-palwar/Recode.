@@ -16,22 +16,25 @@ export default function LeetCodeTable() {
   const [randomCount, setRandomCount] = useState<number>(1);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Load saved data on mount
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE);
     if (savedData) {
       const parsed: Problem[] = JSON.parse(savedData);
       setProblems(parsed);
-      setFilteredProblems(parsed); // load last saved progress
+      setFilteredProblems(parsed);
     }
   }, []);
 
-  // Persist problems to localStorage whenever it changes
-  useEffect(() => {
-    if (problems.length > 0) {
-      localStorage.setItem(STORAGE, JSON.stringify(problems));
-    }
-  }, [problems]);
+  // for saving in local storage
+  // useEffect(() => {
+  //   if (problems.length > 0) {
+  //     const sorted = [...problems].sort(
+  //       (a, b) => a.revisionCount - b.revisionCount
+  //     );
+
+  //     localStorage.setItem(STORAGE, JSON.stringify(sorted));
+  //   }
+  // }, [problems]);
 
   const handleCount = (p: Problem, type: "plus" | "minus") => {
     setProblems((prev) => {
@@ -47,8 +50,27 @@ export default function LeetCodeTable() {
           : problem
       );
 
-      // Update filteredProblems based on updated array
-      setFilteredProblems(updated);
+      const sorted = [...updated].sort(
+        (a, b) => a.revisionCount - b.revisionCount
+      );
+
+      localStorage.setItem(STORAGE, JSON.stringify(sorted));
+
+      return updated;
+    });
+
+    setFilteredProblems((prev) => {
+      const updated = prev.map((val) =>
+        val.problemName === p.problemName
+          ? {
+              ...val,
+              revisionCount:
+                type === "plus"
+                  ? (val.revisionCount || 0) + 1
+                  : Math.max((val.revisionCount || 0) - 1, 0),
+            }
+          : val
+      );
 
       return updated;
     });
@@ -87,6 +109,7 @@ export default function LeetCodeTable() {
 
       setProblems(parsedProblems);
       setFilteredProblems(parsedProblems);
+      localStorage.setItem(STORAGE, JSON.stringify(parsedProblems));
     };
     reader.readAsBinaryString(file);
   };
@@ -120,7 +143,14 @@ export default function LeetCodeTable() {
     );
   };
 
-  const handleReset = () => setFilteredProblems(problems);
+  const handleReset = () => {
+    const saved = localStorage.getItem(STORAGE);
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setFilteredProblems(parsed);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black p-8">
