@@ -205,6 +205,14 @@ export default function LeetCodeTable() {
           </div>
         )}
       </div>
+
+      <div className="image-container absolute bottom-0 right-0 p-4 w-[23vh]">
+        <img
+          className="w-full h-full object-cover"
+          src="https://i.pinimg.com/1200x/69/00/50/69005029e7fd9a35f91442fb461d2305.jpg"
+          alt=""
+        />
+      </div>
     </div>
   );
 }
