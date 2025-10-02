@@ -1,14 +1,20 @@
-import { useEffect, useState } from "react";
-import { Shuffle, PlusIcon, Minus } from "lucide-react";
-import { getCurrentDate } from "./utils";
+import React, { useEffect, useState } from "react";
+import { Shuffle, PlusIcon, Minus, ToggleRightIcon } from "lucide-react";
 import problemsJson from "./data/problems.json";
 import Button from "./components/ui/Button";
 
+const Status = {
+  Accepted: "Accepted",
+  TLE: "Time Limit Exceeded",
+  RuntimeError: "Runtime Error",
+  Wrong: "Wrong Answer",
+  CompileError: "Compile Error",
+} as const;
+
 interface Problem {
-  problemName: string;
+  statement: string;
   status: string;
   revisionCount: number;
-  date?: string;
   href: string;
 }
 
@@ -32,10 +38,9 @@ export default function LeetCodeTable() {
   const handleCount = (p: Problem, type: "plus" | "minus") => {
     setProblems((prev) => {
       const updated = prev.map((problem) =>
-        problem.problemName === p.problemName
+        problem.statement === p.statement
           ? {
               ...problem,
-              date: getCurrentDate(),
               revisionCount:
                 type === "plus"
                   ? (problem.revisionCount || 0) + 1
@@ -55,10 +60,9 @@ export default function LeetCodeTable() {
 
     setFilteredProblems((prev) => {
       const updated = prev.map((val) =>
-        val.problemName === p.problemName
+        val.statement === p.statement
           ? {
               ...val,
-              date: type === "plus" ? getCurrentDate() : val.date,
               revisionCount:
                 type === "plus"
                   ? (val.revisionCount || 0) + 1
@@ -93,6 +97,77 @@ export default function LeetCodeTable() {
     }
   };
 
+  const toggleStatus = (problem: Problem) => {
+    setProblems((prev) => {
+      const updated = prev.map((p) => {
+        if (p.statement !== problem.statement) return p;
+
+        // Toggle logic
+        let newStatus;
+        switch (p.status) {
+          case Status.Accepted:
+            newStatus = Status.Wrong;
+            break;
+          case Status.Wrong:
+            newStatus = Status.TLE;
+            break;
+          case Status.TLE:
+            newStatus = Status.Accepted;
+            break;
+          default:
+            newStatus = Status.Accepted;
+        }
+
+        return { ...p, status: newStatus };
+      });
+
+      localStorage.setItem(STORAGE, JSON.stringify(updated));
+
+      setFilteredProblems((prev) =>
+        prev.map((p) => {
+          if (p.statement !== problem.statement) return p;
+
+          // Toggle logic
+          let newStatus;
+          switch (p.status) {
+            case Status.Accepted:
+              newStatus = Status.Wrong;
+              break;
+            case Status.Wrong:
+              newStatus = Status.TLE;
+              break;
+            case Status.TLE:
+              newStatus = Status.Accepted;
+              break;
+            default:
+              newStatus = Status.Accepted;
+          }
+
+          return { ...p, status: newStatus };
+        })
+      );
+
+      return updated;
+    });
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const query = e.target.value.toLowerCase();
+
+    if (!query) {
+      setFilteredProblems(problems);
+      return;
+    }
+
+    const results = problems.filter((problem) =>
+      problem.statement.toLowerCase().includes(query)
+    );
+
+    setFilteredProblems(results);
+  };
+
   return (
     <div className="min-h-screen bg-black p-8">
       <div className="max-w-6xl mx-auto">
@@ -114,7 +189,10 @@ export default function LeetCodeTable() {
               </select>
             </div>
 
-            <Button onClick={handleRandomFilter}>Random Filter</Button>
+            <Button onClick={handleRandomFilter}>
+              <Shuffle />
+              Random Filter
+            </Button>
             <Button onClick={handleReset}>Reset</Button>
             <Button disabledStyle onClick={handleClearProgress}>
               Clear progress
@@ -125,6 +203,13 @@ export default function LeetCodeTable() {
             </div>
           </div>
         )}
+
+        <input
+          type="text"
+          className="w-full h-[5vh] border-white bg-white outline-none mb-4 rounded-sm pl-4"
+          placeholder="search..."
+          onChange={(e) => handleSearch(e)}
+        />
 
         {/* Table */}
         {filteredProblems.length > 0 && (
@@ -142,9 +227,6 @@ export default function LeetCodeTable() {
                     <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Revision Count
                     </th>
-                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
-                      Date
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
@@ -160,21 +242,29 @@ export default function LeetCodeTable() {
                           rel="noopener noreferrer"
                           className="text-white cursor-pointer hover:text-purple-300 hover:underline font-medium transition-colors"
                         >
-                          {problem.problemName}
+                          {problem.statement}
                         </a>
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            problem.status.toLowerCase() === "solved"
-                              ? "bg-green-900/50 text-green-300"
-                              : problem.status.toLowerCase() === "unsolved"
-                              ? "bg-red-900/50 text-red-300"
-                              : "bg-yellow-900/50 text-yellow-300"
-                          }`}
-                        >
-                          {problem.status}
-                        </span>
+                        <div className="flex gap-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              problem.status === Status.Accepted
+                                ? "bg-green-900/50 text-green-300"
+                                : problem.status === Status.TLE
+                                ? "bg-red-900/50 text-red-300"
+                                : problem.status === Status.Wrong
+                                ? "bg-red-600 text-white"
+                                : "bg-yellow-900/50 text-yellow-300"
+                            }`}
+                          >
+                            {problem.status}
+                          </span>
+                          <ToggleRightIcon
+                            className="text-white cursor-pointer"
+                            onClick={() => toggleStatus(problem)}
+                          />
+                        </div>
                       </td>
                       <td className="flex gap-3 px-6 py-4 text-white font-medium">
                         <Minus
@@ -187,7 +277,7 @@ export default function LeetCodeTable() {
                           onClick={() => handleCount(problem, "plus")}
                         />
                       </td>
-                      <td className="text-white font-medium">{problem.date}</td>
+                      {/* <td className="text-white font-medium">{problem.date}</td>  */}
                     </tr>
                   ))}
                 </tbody>
