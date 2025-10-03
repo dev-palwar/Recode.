@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { Upload, Shuffle, PlusIcon, Minus } from "lucide-react";
-import * as XLSX from "xlsx";
+import { Shuffle, PlusIcon, Minus, ToggleRightIcon } from "lucide-react";
+import problemsJson from "./data/problems.json";
+import Button from "./components/ui/Button";
+
+const Status = {
+  Accepted: "Accepted",
+  TLE: "Time Limit Exceeded",
+  RuntimeError: "Runtime Error",
+  Wrong: "Wrong Answer",
+  CompileError: "Compile Error",
+} as const;
 
 interface Problem {
-  problemName: string;
+  statement: string;
   status: string;
   revisionCount: number;
+  href: string;
 }
 
 const STORAGE = "problems-data";
 
 export default function LeetCodeTable() {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [filteredProblems, setFilteredProblems] = useState<Problem[]>([]);
-  const [randomCount, setRandomCount] = useState<number>(1);
-  const [isDragging, setIsDragging] = useState(false);
+  const [problems, setProblems] = useState<Problem[]>(problemsJson);
+  const [filteredProblems, setFilteredProblems] =
+    useState<Problem[]>(problemsJson);
+  const [randomCount, setRandomCount] = useState<number>(2);
 
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE);
@@ -25,21 +35,10 @@ export default function LeetCodeTable() {
     }
   }, []);
 
-  // for saving in local storage
-  // useEffect(() => {
-  //   if (problems.length > 0) {
-  //     const sorted = [...problems].sort(
-  //       (a, b) => a.revisionCount - b.revisionCount
-  //     );
-
-  //     localStorage.setItem(STORAGE, JSON.stringify(sorted));
-  //   }
-  // }, [problems]);
-
   const handleCount = (p: Problem, type: "plus" | "minus") => {
     setProblems((prev) => {
       const updated = prev.map((problem) =>
-        problem.problemName === p.problemName
+        problem.statement === p.statement
           ? {
               ...problem,
               revisionCount:
@@ -61,7 +60,7 @@ export default function LeetCodeTable() {
 
     setFilteredProblems((prev) => {
       const updated = prev.map((val) =>
-        val.problemName === p.problemName
+        val.statement === p.statement
           ? {
               ...val,
               revisionCount:
@@ -76,63 +75,9 @@ export default function LeetCodeTable() {
     });
   };
 
-  const generateLeetCodeUrl = (problemName: string): string =>
-    `https://leetcode.com/problems/${problemName
-      .toLowerCase()
-      .replace(/\s+/g, "-")}`;
-
-  const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet) as never[];
-
-      const parsedProblems: Problem[] = json.map((row) => ({
-        problemName:
-          row["Problem"] ||
-          row["Problem Name"] ||
-          row["problemName"] ||
-          row["name"] ||
-          "",
-        status: row["Status"] || row["Solved"] || row["status"] || "",
-        revisionCount: Number(
-          row["Revision Count"] ||
-            row["Solved Count"] ||
-            row["revisionCount"] ||
-            row["count"] ||
-            0
-        ),
-      }));
-
-      setProblems(parsedProblems);
-      setFilteredProblems(parsedProblems);
-      localStorage.setItem(STORAGE, JSON.stringify(parsedProblems));
-    };
-    reader.readAsBinaryString(file);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file && (file.name.endsWith(".xlsx") || file.name.endsWith(".xls"))) {
-      handleFile(file);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => setIsDragging(false);
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
+  const handleClearProgress = () => {
+    localStorage.clear();
+    window.location.reload();
   };
 
   const handleRandomFilter = () => {
@@ -152,37 +97,81 @@ export default function LeetCodeTable() {
     }
   };
 
+  const toggleStatus = (problem: Problem) => {
+    setProblems((prev) => {
+      const updated = prev.map((p) => {
+        if (p.statement !== problem.statement) return p;
+
+        // Toggle logic
+        let newStatus;
+        switch (p.status) {
+          case Status.Accepted:
+            newStatus = Status.Wrong;
+            break;
+          case Status.Wrong:
+            newStatus = Status.TLE;
+            break;
+          case Status.TLE:
+            newStatus = Status.Accepted;
+            break;
+          default:
+            newStatus = Status.Accepted;
+        }
+
+        return { ...p, status: newStatus };
+      });
+
+      localStorage.setItem(STORAGE, JSON.stringify(updated));
+
+      setFilteredProblems((prev) =>
+        prev.map((p) => {
+          if (p.statement !== problem.statement) return p;
+
+          // Toggle logic
+          let newStatus;
+          switch (p.status) {
+            case Status.Accepted:
+              newStatus = Status.Wrong;
+              break;
+            case Status.Wrong:
+              newStatus = Status.TLE;
+              break;
+            case Status.TLE:
+              newStatus = Status.Accepted;
+              break;
+            default:
+              newStatus = Status.Accepted;
+          }
+
+          return { ...p, status: newStatus };
+        })
+      );
+
+      return updated;
+    });
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const query = e.target.value.toLowerCase();
+
+    if (!query) {
+      setFilteredProblems(problems);
+      return;
+    }
+
+    const results = problems.filter((problem) =>
+      problem.statement.toLowerCase().includes(query)
+    );
+
+    setFilteredProblems(results);
+  };
+
   return (
     <div className="min-h-screen bg-black p-8">
       <div className="max-w-6xl mx-auto">
         {/* Upload Area */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={`border-4 border-dashed rounded-xl p-12 mb-8 text-center transition-all ${
-            isDragging
-              ? "border-purple-400 bg-purple-900/30"
-              : "border-purple-500/50 bg-slate-800/50"
-          }`}
-        >
-          <Upload className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-          <p className="text-xl text-white mb-2">
-            Drag & Drop your Excel file here
-          </p>
-          <p className="text-purple-300 mb-4">or</p>
-          <label className="inline-block">
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileInput}
-              className="hidden"
-            />
-            <span className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg cursor-pointer transition-colors inline-block">
-              Browse Files
-            </span>
-          </label>
-        </div>
 
         {/* Controls */}
         {problems.length > 0 && (
@@ -199,39 +188,43 @@ export default function LeetCodeTable() {
                 <option value={3}>3</option>
               </select>
             </div>
-            <button
-              onClick={handleRandomFilter}
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Shuffle className="w-5 h-5" />
+
+            <Button onClick={handleRandomFilter}>
+              <Shuffle />
               Random Filter
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-6 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors"
-            >
-              Reset
-            </button>
+            </Button>
+            <Button onClick={handleReset}>Reset</Button>
+            <Button disabledStyle onClick={handleClearProgress}>
+              Clear progress
+            </Button>
+
             <div className="ml-auto text-purple-300">
               Showing {filteredProblems.length} of {problems.length} problems
             </div>
           </div>
         )}
 
+        <input
+          type="text"
+          className="w-full h-[5vh] border-white bg-white outline-none mb-4 rounded-sm pl-4"
+          placeholder="search..."
+          onChange={(e) => handleSearch(e)}
+        />
+
         {/* Table */}
         {filteredProblems.length > 0 && (
-          <div className="bg-slate-800/70 rounded-xl overflow-hidden shadow-2xl max-h-[45vh] overflow-y-auto">
+          <div className="bg-slate-800/70 rounded-xl overflow-hidden shadow-2xl max-h-[69vh] overflow-y-auto">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-purple-900/50">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                  <tr className="bg-[#141c2a]">
+                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Problem Name
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
+                    <th className="text-[18px] px-6 py-4 text-left text-sm font-semibold text-purple-200 uppercase tracking-wider">
                       Revision Count
                     </th>
                   </tr>
@@ -244,26 +237,34 @@ export default function LeetCodeTable() {
                     >
                       <td className="px-6 py-4">
                         <a
-                          href={generateLeetCodeUrl(problem.problemName)}
+                          href={problem.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-purple-400 hover:text-purple-300 hover:underline font-medium transition-colors"
+                          className="text-white cursor-pointer hover:text-purple-300 hover:underline font-medium transition-colors"
                         >
-                          {problem.problemName}
+                          {problem.statement}
                         </a>
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            problem.status.toLowerCase() === "solved"
-                              ? "bg-green-900/50 text-green-300"
-                              : problem.status.toLowerCase() === "unsolved"
-                              ? "bg-red-900/50 text-red-300"
-                              : "bg-yellow-900/50 text-yellow-300"
-                          }`}
-                        >
-                          {problem.status}
-                        </span>
+                        <div className="flex gap-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              problem.status === Status.Accepted
+                                ? "bg-green-900/50 text-green-300"
+                                : problem.status === Status.TLE
+                                ? "bg-red-900/50 text-red-300"
+                                : problem.status === Status.Wrong
+                                ? "bg-red-600 text-white"
+                                : "bg-yellow-900/50 text-yellow-300"
+                            }`}
+                          >
+                            {problem.status}
+                          </span>
+                          <ToggleRightIcon
+                            className="text-white cursor-pointer"
+                            onClick={() => toggleStatus(problem)}
+                          />
+                        </div>
                       </td>
                       <td className="flex gap-3 px-6 py-4 text-white font-medium">
                         <Minus
@@ -276,6 +277,7 @@ export default function LeetCodeTable() {
                           onClick={() => handleCount(problem, "plus")}
                         />
                       </td>
+                      {/* <td className="text-white font-medium">{problem.date}</td>  */}
                     </tr>
                   ))}
                 </tbody>
@@ -292,6 +294,14 @@ export default function LeetCodeTable() {
             </p>
           </div>
         )}
+      </div>
+
+      <div className="image-container absolute bottom-0 right-0 p-4 w-[23vh]">
+        <img
+          className="w-full h-full object-cover"
+          src="https://i.pinimg.com/1200x/69/00/50/69005029e7fd9a35f91442fb461d2305.jpg"
+          alt=""
+        />
       </div>
     </div>
   );
