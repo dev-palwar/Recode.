@@ -62,13 +62,13 @@ export default function LeetCodePage() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "easy":
-        return "text-emerald-700";
+        return "text-emerald-600 dark:text-emerald-400";
       case "medium":
-        return "text-amber-700";
+        return "text-amber-600 dark:text-amber-400";
       case "hard":
-        return "text-rose-700";
+        return "text-rose-600 dark:text-rose-400";
       default:
-        return "text-slate-600";
+        return "text-muted-foreground";
     }
   };
 
@@ -89,25 +89,25 @@ export default function LeetCodePage() {
     : null;
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-50 via-stone-50 to-neutral-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-light text-slate-900 tracking-tight mb-1">
+              <h1 className="text-2xl font-light text-foreground tracking-tight mb-1">
                 LeetCode Progress
               </h1>
-              <p className="text-sm text-slate-500 font-light">
+              <p className="text-sm text-muted-foreground font-light">
                 Your competitive programming journey
               </p>
             </div>
             {data && (
               <div className="text-right">
-                <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                   Last Sync
                 </div>
-                <div className="text-sm text-slate-600 font-light">
+                <div className="text-sm text-muted-foreground font-light">
                   {new Date(data.lastFetched).toLocaleDateString("en-US", {
                     month: "long",
                     day: "numeric",
@@ -126,8 +126,8 @@ export default function LeetCodePage() {
         {loading && (
           <div className="flex items-center justify-center py-32">
             <div className="text-center">
-              <div className="inline-block w-12 h-12 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin mb-4"></div>
-              <p className="text-slate-500 font-light">
+              <div className="inline-block w-12 h-12 border-2 border-muted border-t-foreground rounded-full animate-spin mb-4"></div>
+              <p className="text-muted-foreground font-light">
                 Loading your achievements...
               </p>
             </div>
@@ -136,19 +136,21 @@ export default function LeetCodePage() {
 
         {error && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-rose-50 border border-rose-100 rounded-lg p-6">
+            <div className="border border-destructive/50 rounded-lg p-6 bg-destructive/10">
               <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-rose-600 text-xs">!</span>
+                <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-destructive text-xs">!</span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-rose-900 mb-1">
+                  <h3 className="text-sm font-medium text-foreground mb-1">
                     Unable to load data
                   </h3>
-                  <p className="text-sm text-rose-700 font-light">{error}</p>
+                  <p className="text-sm text-muted-foreground font-light">
+                    {error}
+                  </p>
                   <button
                     onClick={() => fetchData()}
-                    className="mt-3 text-sm text-rose-600 hover:text-rose-700 font-light underline underline-offset-2"
+                    className="mt-3 text-sm text-foreground hover:text-foreground/80 font-light underline underline-offset-2"
                   >
                     Try again
                   </button>
@@ -162,50 +164,50 @@ export default function LeetCodePage() {
           <>
             {/* Stats Cards */}
             <div className="grid grid-cols-4 gap-6 mb-12">
-              <div className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="text-xs text-slate-400 uppercase tracking-widest mb-3">
+              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
+                <div className="text-xs text-muted-foreground uppercase tracking-widest mb-3">
                   Total Solved
                 </div>
-                <div className="text-4xl font-light text-slate-900 mb-1">
+                <div className="text-4xl font-light text-foreground mb-1">
                   {data.totalSolved}
                 </div>
-                <div className="text-xs text-slate-500 font-light">
+                <div className="text-xs text-muted-foreground font-light">
                   problems completed
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="text-xs text-emerald-600 uppercase tracking-widest mb-3">
+              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
+                <div className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">
                   Easy
                 </div>
-                <div className="text-4xl font-light text-emerald-900 mb-1">
+                <div className="text-4xl font-light text-foreground mb-1">
                   {stats?.easy || 0}
                 </div>
-                <div className="text-xs text-emerald-700 font-light">
+                <div className="text-xs text-muted-foreground font-light">
                   foundational mastery
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="text-xs text-amber-600 uppercase tracking-widest mb-3">
+              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
+                <div className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3">
                   Medium
                 </div>
-                <div className="text-4xl font-light text-amber-900 mb-1">
+                <div className="text-4xl font-light text-foreground mb-1">
                   {stats?.medium || 0}
                 </div>
-                <div className="text-xs text-amber-700 font-light">
+                <div className="text-xs text-muted-foreground font-light">
                   intermediate prowess
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-rose-50 to-red-50 border border-rose-100 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-                <div className="text-xs text-rose-600 uppercase tracking-widest mb-3">
+              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
+                <div className="text-xs text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-3">
                   Hard
                 </div>
-                <div className="text-4xl font-light text-rose-900 mb-1">
+                <div className="text-4xl font-light text-foreground mb-1">
                   {stats?.hard || 0}
                 </div>
-                <div className="text-xs text-rose-700 font-light">
+                <div className="text-xs text-muted-foreground font-light">
                   expert achievements
                 </div>
               </div>
@@ -220,10 +222,10 @@ export default function LeetCodePage() {
                     placeholder="Search by title or problem number..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-5 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-300 font-light transition-all"
+                    className="w-full px-5 py-3 bg-background border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-light transition-all"
                   />
                 </div>
-                <div className="flex gap-2 border border-slate-200 rounded-lg p-1 bg-white">
+                <div className="flex gap-2 border rounded-lg p-1 bg-card">
                   {[
                     { value: "all", label: "All" },
                     { value: "easy", label: "Easy" },
@@ -235,8 +237,8 @@ export default function LeetCodePage() {
                       onClick={() => setFilter(diff.value)}
                       className={`px-5 py-2 rounded-md text-sm font-light transition-all ${
                         filter === diff.value
-                          ? "bg-slate-900 text-white shadow-sm"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
                     >
                       {diff.label}
@@ -244,16 +246,16 @@ export default function LeetCodePage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-3 text-sm text-slate-500 font-light">
+              <div className="mt-3 text-sm text-muted-foreground font-light">
                 Showing {filteredProblems.length} of {data.totalSolved} problems
               </div>
             </div>
 
             {/* Problems Table */}
-            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+            <div className="border rounded-lg overflow-y-auto h-[45vh] shadow-sm bg-card">
               {filteredProblems.length === 0 ? (
                 <div className="py-24 text-center">
-                  <div className="text-slate-400 mb-2">
+                  <div className="text-muted-foreground mb-2">
                     <svg
                       className="w-12 h-12 mx-auto mb-4"
                       fill="none"
@@ -268,49 +270,49 @@ export default function LeetCodePage() {
                       />
                     </svg>
                   </div>
-                  <p className="text-slate-500 font-light">
+                  <p className="text-muted-foreground font-light">
                     No problems found matching your criteria
                   </p>
                 </div>
               ) : (
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="text-left px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-24">
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-24">
                         ID
                       </th>
-                      <th className="text-left px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Problem
                       </th>
-                      <th className="text-left px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-32">
+                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-32">
                         Difficulty
                       </th>
-                      <th className="text-left px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-40">
+                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-40">
                         Acceptance
                       </th>
-                      <th className="text-right px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider w-32">
+                      <th className="text-right px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-32">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-border">
                     {filteredProblems.map((problem) => (
                       <tr
                         key={problem.id}
-                        className="hover:bg-slate-50 transition-colors group"
+                        className="hover:bg-muted/50 transition-colors group"
                       >
                         <td className="px-6 py-4">
-                          <span className="text-slate-400 font-mono text-sm font-light">
+                          <span className="text-muted-foreground font-mono text-sm font-light">
                             #{problem.id}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <span className="text-slate-900 font-light">
+                            <span className="text-foreground font-light">
                               {problem.title}
                             </span>
                             {problem.isPaidOnly && (
-                              <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded font-light">
+                              <span className="px-2 py-0.5 text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded font-light">
                                 Premium
                               </span>
                             )}
@@ -327,13 +329,13 @@ export default function LeetCodePage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-slate-100 rounded-full h-1.5 w-24">
+                            <div className="flex-1 bg-muted rounded-full h-1.5 w-24">
                               <div
-                                className="bg-slate-400 h-1.5 rounded-full transition-all"
+                                className="bg-foreground/60 h-1.5 rounded-full transition-all"
                                 style={{ width: `${problem.acceptanceRate}%` }}
                               ></div>
                             </div>
-                            <span className="text-sm text-slate-600 font-light w-12 text-right">
+                            <span className="text-sm text-muted-foreground font-light w-12 text-right">
                               {problem.acceptanceRate}%
                             </span>
                           </div>
@@ -343,7 +345,7 @@ export default function LeetCodePage() {
                             href={`https://leetcode.com/problems/${problem.titleSlug}/`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 rounded-lg transition-all font-light group-hover:shadow-sm"
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground border hover:border-foreground/20 rounded-lg transition-all font-light group-hover:shadow-sm"
                           >
                             View
                             <svg
