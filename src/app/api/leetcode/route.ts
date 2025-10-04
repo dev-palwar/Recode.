@@ -25,6 +25,7 @@ interface Problem {
   totalAccepted: number;
   totalSubmissions: number;
   isPaidOnly: boolean;
+  revisionCount: number;
 }
 
 interface LeetCodeData {

@@ -1,25 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-interface Problem {
-  id: number;
-  title: string;
-  titleSlug: string;
-  difficulty: string;
-  difficultyLevel: number;
-  acceptanceRate: number;
-  totalAccepted: number;
-  totalSubmissions: number;
-  isPaidOnly: boolean;
-}
-
-interface LeetCodeData {
-  totalSolved: number;
-  lastFetched: string;
-  filtered: number;
-  problems: Problem[];
-}
+import StatsGrid from "./StatsGrid";
+import { LeetCodeData, Problem } from "@/types/index";
+import { storage } from "@/lib/storage";
+import { fetchLeetCodeData } from "@/lib/api";
+import {
+  calculateStats,
+  filterProblems,
+  sortProblemsByRevision,
+  scrollToElement,
+} from "@/lib/utils";
+import ProblemsTable from "./ProblemTable";
 
 export default function LeetCodePage() {
   const [data, setData] = useState<LeetCodeData | null>(null);
@@ -28,65 +20,124 @@ export default function LeetCodePage() {
   const [filter, setFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchData = async (difficulty?: string) => {
+  // Load data on mount - from localStorage first, then API if needed
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Try to load from localStorage first
+        const cachedData = storage.get();
+
+        if (cachedData) {
+          console.log("Loading from localStorage cache");
+          setData(cachedData);
+          setLoading(false);
+        } else {
+          // No cache, fetch from API
+          console.log("No cache found, fetching from API");
+          const apiData = await fetchLeetCodeData();
+
+          // Ensure revisionCount exists for all problems
+          const problems = apiData.problems.map((p) => ({
+            ...p,
+            revisionCount: p.revisionCount || 0,
+          }));
+
+          const dataWithRevisions = {
+            ...apiData,
+            problems,
+          };
+
+          setData(dataWithRevisions);
+          storage.set(dataWithRevisions);
+          setLoading(false);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        setData(null);
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Update problem revision count
+  const updateProblemRevisionCount = (
+    problem: Problem,
+    type: "plus" | "minus"
+  ) => {
+    if (!data) return;
+
+    const newCount =
+      type === "plus"
+        ? problem.revisionCount + 1
+        : Math.max(problem.revisionCount - 1, 0);
+
+    // Update the problem in the array
+    const updatedProblems = data.problems.map((p) =>
+      p.id === problem.id ? { ...p, revisionCount: newCount } : p
+    );
+
+    // Sort by revision count (highest at bottom)
+    const sortedProblems = sortProblemsByRevision(updatedProblems);
+
+    const updatedData = {
+      ...data,
+      problems: sortedProblems,
+    };
+
+    // Update state
+    setData(updatedData);
+
+    // Save to localStorage immediately
+    storage.set(updatedData);
+
+    // Scroll to the updated element
+    scrollToElement(problem.title);
+  };
+
+  // Refresh data from API (manual refresh)
+  const refreshData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const url =
-        difficulty && difficulty !== "all"
-          ? `/api/leetcode?difficulty=${difficulty}`
-          : "/api/leetcode";
+      const apiData = await fetchLeetCodeData();
 
-      const response = await fetch(url);
+      // Merge with existing revision counts from localStorage
+      const cachedData = storage.get();
+      const problems = apiData.problems.map((p) => {
+        const cached = cachedData?.problems.find((cp) => cp.id === p.id);
+        return {
+          ...p,
+          revisionCount: cached?.revisionCount || 0,
+        };
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch data");
-      }
+      const dataWithRevisions = {
+        ...apiData,
+        problems,
+      };
 
-      const result = await response.json();
-      setData(result);
+      setData(dataWithRevisions);
+      storage.set(dataWithRevisions);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
-      setData(null);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData(filter === "all" ? undefined : filter);
-  }, [filter]);
+  // Client-side filtering
+  const filteredAndSortedProblems = data
+    ? sortProblemsByRevision(filterProblems(data.problems, filter, searchTerm))
+    : [];
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "text-emerald-600 dark:text-emerald-400";
-      case "medium":
-        return "text-amber-600 dark:text-amber-400";
-      case "hard":
-        return "text-rose-600 dark:text-rose-400";
-      default:
-        return "text-muted-foreground";
-    }
-  };
-
-  const filteredProblems =
-    data?.problems.filter(
-      (problem) =>
-        searchTerm === "" ||
-        problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        problem.id.toString().includes(searchTerm)
-    ) || [];
-
-  const stats = data
-    ? {
-        easy: data.problems.filter((p) => p.difficulty === "Easy").length,
-        medium: data.problems.filter((p) => p.difficulty === "Medium").length,
-        hard: data.problems.filter((p) => p.difficulty === "Hard").length,
-      }
-    : null;
+  // Calculate stats from all problems (not filtered)
+  const stats = data ? calculateStats(data.problems) : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,7 +200,7 @@ export default function LeetCodePage() {
                     {error}
                   </p>
                   <button
-                    onClick={() => fetchData()}
+                    onClick={refreshData}
                     className="mt-3 text-sm text-foreground hover:text-foreground/80 font-light underline underline-offset-2"
                   >
                     Try again
@@ -160,58 +211,10 @@ export default function LeetCodePage() {
           </div>
         )}
 
-        {data && !loading && (
+        {data && !loading && stats && (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-4 gap-6 mb-12">
-              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
-                <div className="text-xs text-muted-foreground uppercase tracking-widest mb-3">
-                  Total Solved
-                </div>
-                <div className="text-4xl font-light text-foreground mb-1">
-                  {data.totalSolved}
-                </div>
-                <div className="text-xs text-muted-foreground font-light">
-                  problems completed
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
-                <div className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">
-                  Easy
-                </div>
-                <div className="text-4xl font-light text-foreground mb-1">
-                  {stats?.easy || 0}
-                </div>
-                <div className="text-xs text-muted-foreground font-light">
-                  foundational mastery
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
-                <div className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3">
-                  Medium
-                </div>
-                <div className="text-4xl font-light text-foreground mb-1">
-                  {stats?.medium || 0}
-                </div>
-                <div className="text-xs text-muted-foreground font-light">
-                  intermediate prowess
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 bg-card">
-                <div className="text-xs text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-3">
-                  Hard
-                </div>
-                <div className="text-4xl font-light text-foreground mb-1">
-                  {stats?.hard || 0}
-                </div>
-                <div className="text-xs text-muted-foreground font-light">
-                  expert achievements
-                </div>
-              </div>
-            </div>
+            <StatsGrid stats={stats} />
 
             {/* Search and Filters */}
             <div className="mb-8">
@@ -235,7 +238,7 @@ export default function LeetCodePage() {
                     <button
                       key={diff.value}
                       onClick={() => setFilter(diff.value)}
-                      className={`px-5 py-2 rounded-md text-sm font-light transition-all ${
+                      className={`cursor-pointer px-5 py-2 rounded-md text-sm font-light transition-all ${
                         filter === diff.value
                           ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -247,127 +250,17 @@ export default function LeetCodePage() {
                 </div>
               </div>
               <div className="mt-3 text-sm text-muted-foreground font-light">
-                Showing {filteredProblems.length} of {data.totalSolved} problems
+                Showing {filteredAndSortedProblems.length} of {data.totalSolved}{" "}
+                problems
               </div>
             </div>
 
             {/* Problems Table */}
             <div className="border rounded-lg overflow-y-auto h-[45vh] shadow-sm bg-card">
-              {filteredProblems.length === 0 ? (
-                <div className="py-24 text-center">
-                  <div className="text-muted-foreground mb-2">
-                    <svg
-                      className="w-12 h-12 mx-auto mb-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-muted-foreground font-light">
-                    No problems found matching your criteria
-                  </p>
-                </div>
-              ) : (
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-24">
-                        ID
-                      </th>
-                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Problem
-                      </th>
-                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-32">
-                        Difficulty
-                      </th>
-                      <th className="text-left px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-40">
-                        Acceptance
-                      </th>
-                      <th className="text-right px-6 py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-32">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {filteredProblems.map((problem) => (
-                      <tr
-                        key={problem.id}
-                        className="hover:bg-muted/50 transition-colors group"
-                      >
-                        <td className="px-6 py-4">
-                          <span className="text-muted-foreground font-mono text-sm font-light">
-                            #{problem.id}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <span className="text-foreground font-light">
-                              {problem.title}
-                            </span>
-                            {problem.isPaidOnly && (
-                              <span className="px-2 py-0.5 text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded font-light">
-                                Premium
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`text-sm font-light ${getDifficultyColor(
-                              problem.difficulty
-                            )}`}
-                          >
-                            {problem.difficulty}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-muted rounded-full h-1.5 w-24">
-                              <div
-                                className="bg-foreground/60 h-1.5 rounded-full transition-all"
-                                style={{ width: `${problem.acceptanceRate}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-muted-foreground font-light w-12 text-right">
-                              {problem.acceptanceRate}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <a
-                            href={`https://leetcode.com/problems/${problem.titleSlug}/`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground border hover:border-foreground/20 rounded-lg transition-all font-light group-hover:shadow-sm"
-                          >
-                            View
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                              />
-                            </svg>
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+              <ProblemsTable
+                problems={filteredAndSortedProblems}
+                onUpdateRevisionCount={updateProblemRevisionCount}
+              />
             </div>
           </>
         )}
