@@ -48,7 +48,7 @@ export const filterProblems = (
 };
 
 export const sortProblemsByRevision = (problems: Problem[]): Problem[] => {
-  return [...problems].sort((a, b) => a.revisionCount - b.revisionCount);
+  return [...problems].sort((a, b) => a.revisionCounter - b.revisionCounter);
 };
 
 export const scrollToElement = (elementId: string): void => {

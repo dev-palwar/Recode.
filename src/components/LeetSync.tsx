@@ -12,6 +12,7 @@ import {
   scrollToElement,
 } from "@/lib/utils";
 import ProblemsTable from "./ProblemTable";
+import { Button } from "./ui/button";
 
 export default function LeetCodePage() {
   const [data, setData] = useState<LeetCodeData | null>(null);
@@ -20,7 +21,7 @@ export default function LeetCodePage() {
   const [filter, setFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Load data on mount - from localStorage first, then API if needed
+  // Loads data on mount - from localStorage first, then API if needed
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -39,10 +40,10 @@ export default function LeetCodePage() {
           console.log("No cache found, fetching from API");
           const apiData = await fetchLeetCodeData();
 
-          // Ensure revisionCount exists for all problems
+          // Ensure revisionCounter exists for all problems
           const problems = apiData.problems.map((p) => ({
             ...p,
-            revisionCount: p.revisionCount || 0,
+            revisionCounter: p.revisionCounter || 0,
           }));
 
           const dataWithRevisions = {
@@ -65,7 +66,7 @@ export default function LeetCodePage() {
   }, []);
 
   // Update problem revision count
-  const updateProblemRevisionCount = (
+  const updateProblemrevisionCounter = (
     problem: Problem,
     type: "plus" | "minus"
   ) => {
@@ -73,12 +74,12 @@ export default function LeetCodePage() {
 
     const newCount =
       type === "plus"
-        ? problem.revisionCount + 1
-        : Math.max(problem.revisionCount - 1, 0);
+        ? problem.revisionCounter + 1
+        : Math.max(problem.revisionCounter - 1, 0);
 
     // Update the problem in the array
     const updatedProblems = data.problems.map((p) =>
-      p.id === problem.id ? { ...p, revisionCount: newCount } : p
+      p.id === problem.id ? { ...p, revisionCounter: newCount } : p
     );
 
     // Sort by revision count (highest at bottom)
@@ -113,7 +114,7 @@ export default function LeetCodePage() {
         const cached = cachedData?.problems.find((cp) => cp.id === p.id);
         return {
           ...p,
-          revisionCount: cached?.revisionCount || 0,
+          revisionCounter: cached?.revisionCounter || 0,
         };
       });
 
@@ -248,6 +249,7 @@ export default function LeetCodePage() {
                     </button>
                   ))}
                 </div>
+                <Button>Random</Button>
               </div>
               <div className="mt-3 text-sm text-muted-foreground font-light">
                 Showing {filteredAndSortedProblems.length} of {data.totalSolved}{" "}
@@ -259,7 +261,7 @@ export default function LeetCodePage() {
             <div className="border rounded-lg overflow-y-auto h-[45vh] shadow-sm bg-card">
               <ProblemsTable
                 problems={filteredAndSortedProblems}
-                onUpdateRevisionCount={updateProblemRevisionCount}
+                onUpdaterevisionCounter={updateProblemrevisionCounter}
               />
             </div>
           </>

@@ -1,10 +1,21 @@
-interface Schema {
+interface User {
   userid: string;
   name: string;
   email: string;
   image: string;
   createdAt: string;
-  problems: Problem[];
+  problems: {
+    id: number;
+    title: string;
+    titleSlug: string;
+    difficulty: string;
+    difficultyLevel: number;
+    acceptanceRate: number;
+    totalAccepted: number;
+    totalSubmissions: number;
+    isPaidOnly: boolean;
+    revisionCounter: number;
+  }[];
 }
 
 interface Problem {
@@ -17,6 +28,7 @@ interface Problem {
   totalAccepted: number;
   totalSubmissions: number;
   isPaidOnly: boolean;
+  revisionCounter: number;
 }
 
 // interface user {

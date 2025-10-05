@@ -1,4 +1,3 @@
-// ProblemsTable.tsx
 import React from "react";
 import { Minus, PlusIcon } from "lucide-react";
 import { Problem } from "@/types/index";
@@ -6,12 +5,12 @@ import { getDifficultyColor } from "@/lib/utils";
 
 interface ProblemsTableProps {
   problems: Problem[];
-  onUpdateRevisionCount: (problem: Problem, type: "plus" | "minus") => void;
+  onUpdaterevisionCounter: (problem: Problem, type: "plus" | "minus") => void;
 }
 
 const ProblemsTable: React.FC<ProblemsTableProps> = ({
   problems,
-  onUpdateRevisionCount,
+  onUpdaterevisionCounter,
 }) => {
   if (problems.length === 0) {
     return (
@@ -103,17 +102,17 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({
             <td className="px-6 py-4">
               <div className="flex items-center justify-center gap-3">
                 <button
-                  onClick={() => onUpdateRevisionCount(problem, "minus")}
+                  onClick={() => onUpdaterevisionCounter(problem, "minus")}
                   className="p-1 hover:bg-muted rounded transition-colors"
                   aria-label="Decrease revision count"
                 >
                   <Minus className="w-4 h-4 cursor-pointer hover:text-red-400 transition-colors" />
                 </button>
                 <span className="text-foreground font-medium w-8 text-center">
-                  {problem.revisionCount}
+                  {problem.revisionCounter}
                 </span>
                 <button
-                  onClick={() => onUpdateRevisionCount(problem, "plus")}
+                  onClick={() => onUpdaterevisionCounter(problem, "plus")}
                   className="p-1 hover:bg-muted rounded transition-colors"
                   aria-label="Increase revision count"
                 >

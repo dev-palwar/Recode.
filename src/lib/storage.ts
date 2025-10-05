@@ -1,4 +1,5 @@
 import { LeetCodeData } from "@/types/index";
+import { syncProblemsToServer } from "./api";
 
 const STORAGE_KEY = "leetcode-tracker";
 
@@ -13,9 +14,14 @@ export const storage = {
     }
   },
 
-  set: (data: LeetCodeData): void => {
+  set: async (data: LeetCodeData, syncToServer = true): Promise<void> => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+      // Optionally sync to server
+      if (syncToServer) {
+        await syncProblemsToServer(data.problems);
+      }
     } catch (error) {
       console.error("Error writing to localStorage:", error);
     }
