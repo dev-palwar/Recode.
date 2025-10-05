@@ -13,13 +13,23 @@ import {
 } from "@/lib/utils";
 import ProblemsTable from "./ProblemTable";
 import { Button } from "./ui/button";
-
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 export default function LeetCodePage() {
   const [data, setData] = useState<LeetCodeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [randomCount, setRandomCount] = useState<number | undefined>(undefined);
+  const [randomProblems, setRandomProblems] = useState<Problem[] | null>(null);
 
   // Loads data on mount - from localStorage first, then API if needed
   useEffect(() => {
@@ -90,13 +100,18 @@ export default function LeetCodePage() {
       problems: sortedProblems,
     };
 
-    // Update state
     setData(updatedData);
-
-    // Save to localStorage immediately
     storage.set(updatedData);
 
-    // Scroll to the updated element
+    // --- Update randomProblems if active ---
+    if (randomProblems) {
+      // Update and re-sort the randomProblems array as well
+      const updatedRandomProblems = randomProblems.map((p) =>
+        p.id === problem.id ? { ...p, revisionCounter: newCount } : p
+      );
+      setRandomProblems(sortProblemsByRevision(updatedRandomProblems));
+    }
+
     scrollToElement(problem.title);
   };
 
@@ -139,6 +154,23 @@ export default function LeetCodePage() {
 
   // Calculate stats from all problems (not filtered)
   const stats = data ? calculateStats(data.problems) : null;
+
+  const handleRandomClick = () => {
+    if (!randomCount || filteredAndSortedProblems.length === 0) {
+      setRandomProblems(null);
+      return;
+    }
+    // Shuffle and pick randomCount problems
+    const shuffled = [...filteredAndSortedProblems].sort(
+      () => Math.random() - 0.5
+    );
+    setRandomProblems(sortProblemsByRevision(shuffled.slice(0, randomCount)));
+  };
+
+  const handleReset = () => {
+    setSearchTerm("");
+    setRandomProblems(null);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,20 +268,35 @@ export default function LeetCodePage() {
                     { value: "medium", label: "Medium" },
                     { value: "hard", label: "Hard" },
                   ].map((diff) => (
-                    <button
+                    <Button
+                      variant={filter !== diff.value ? "ghost" : "default"}
                       key={diff.value}
                       onClick={() => setFilter(diff.value)}
-                      className={`cursor-pointer px-5 py-2 rounded-md text-sm font-light transition-all ${
-                        filter === diff.value
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      }`}
+                      className="cursor-pointer"
                     >
                       {diff.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
-                <Button>Random</Button>
+                <Select
+                  onValueChange={(value) => setRandomCount(Number(value))}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a number" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Random ount</SelectLabel>
+                      {[1, 2, 3, 4, 5].map((number) => (
+                        <SelectItem key={number} value={String(number)}>
+                          {number}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleRandomClick}>Random</Button>
+                <Button onClick={handleReset}>Reset</Button>
               </div>
               <div className="mt-3 text-sm text-muted-foreground font-light">
                 Showing {filteredAndSortedProblems.length} of {data.totalSolved}{" "}
@@ -260,7 +307,7 @@ export default function LeetCodePage() {
             {/* Problems Table */}
             <div className="border rounded-lg overflow-y-auto h-[45vh] shadow-sm bg-card">
               <ProblemsTable
-                problems={filteredAndSortedProblems}
+                problems={randomProblems ?? filteredAndSortedProblems}
                 onUpdaterevisionCounter={updateProblemrevisionCounter}
               />
             </div>
