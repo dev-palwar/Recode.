@@ -8,10 +8,9 @@ import { storage } from "@/lib/storage";
 import { Prisma, User } from "@prisma/client";
 import { toast } from "sonner";
 import { Spinner } from "./ui/spinner";
+import { saveUserProgress } from "@/lib/api";
 
-type Props = {};
-
-function Header({}: Props) {
+function Header() {
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
 
@@ -21,9 +20,7 @@ function Header({}: Props) {
 
   const handleSaveProgress = async () => {
     setLoading(true);
-    const savedData = storage.get();
-
-    console.log(savedData?.problems);
+    const savedData = storage.get({ userId: user?.id });
 
     const payload: Prisma.UserCreateInput = {
       clerkId: user.id,
@@ -31,22 +28,21 @@ function Header({}: Props) {
       email: user.primaryEmailAddress?.emailAddress as string,
       image: user.imageUrl,
       problems: savedData?.problems ?? [],
+      filtered: savedData?.filtered,
+      lastFetched: savedData?.lastFetched,
+      totalSolved: savedData?.totalSolved,
     };
 
     if (savedData && user) {
       try {
-        const res = await fetch("/api/save-progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        const updated = await res.json();
-        toast("Progress saved 👍 ");
-        setLoading(false);
-        console.log("Progress saved:", updated);
+        const res = await saveUserProgress(payload);
+        if (res) {
+          toast("Progress saved 👍 ");
+          setLoading(false);
+        }
       } catch (error) {
-        console.error("Error:", error);
+        setLoading(false);
+        toast("Some error occurred");
       }
     }
   };

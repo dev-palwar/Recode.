@@ -1,37 +1,45 @@
 import { LeetCodeData } from "@/types/index";
-import { syncProblemsToServer } from "./api";
 
 const STORAGE_KEY = "leetcode-tracker";
 
 export const storage = {
-  get: (): LeetCodeData | null => {
+  get: ({ userId }: { userId: string }): LeetCodeData | null => {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      const key = `${userId}-${STORAGE_KEY}`; // safer separator
+      const data = localStorage.getItem(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      console.error("Error reading from localStorage:", error);
       return null;
     }
   },
 
-  set: async (data: LeetCodeData, syncToServer = true): Promise<void> => {
+  set: async ({
+    data,
+    userId,
+  }: {
+    data: LeetCodeData;
+    userId: string;
+  }): Promise<void> => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-      // Optionally sync to server
-      if (syncToServer) {
-        await syncProblemsToServer(data.problems);
-      }
-    } catch (error) {
-      console.error("Error writing to localStorage:", error);
-    }
+      const key = `${userId}-${STORAGE_KEY}`;
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {}
   },
 
-  clear: (): void => {
+  clear: (userId?: string): void => {
     try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.error("Error clearing localStorage:", error);
-    }
+      if (userId) {
+        // clear only this user's data
+        const key = `${userId}-${STORAGE_KEY}`;
+        localStorage.removeItem(key);
+      } else {
+        // fallback: remove all possible keys containing the pattern
+        Object.keys(localStorage).forEach((key) => {
+          if (key.endsWith(STORAGE_KEY)) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+    } catch (error) {}
   },
 };

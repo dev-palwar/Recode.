@@ -12,7 +12,6 @@ export async function syncUser() {
 
   try {
     // Check if user already exists
-    console.log("ran prisma");
 
     const existingUser = await prisma.user.findUnique({
       where: { clerkId: user.id },
@@ -23,8 +22,6 @@ export async function syncUser() {
       const email = user.emailAddresses[0]?.emailAddress;
       const name =
         `${user.firstName || ""} ${user.lastName || ""}`.trim() || null;
-
-      console.log("ran prisma");
 
       const dbUser = await prisma.user.create({
         data: {
@@ -40,7 +37,6 @@ export async function syncUser() {
 
     return { success: true, user: existingUser, created: false };
   } catch (error) {
-    console.error("Error syncing user:", error);
     return { success: false, error: "Failed to sync user" };
   }
 }

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, cache } from "react";
 import StatsGrid from "./StatsGrid";
 import { LeetCodeData, Problem } from "@/types/index";
 import { storage } from "@/lib/storage";
-import { fetchLeetCodeData } from "@/lib/api";
+import { fetchLeetCodeDataFromExt, fetchUserFromDb } from "@/lib/api";
 import {
   calculateStats,
   filterProblems,
   sortProblemsByRevision,
   scrollToElement,
 } from "@/lib/utils";
-import ProblemsTable from "./ProblemTable";
+import ProblemsTable from "@/components/ProblemTable";
 import { Button } from "./ui/button";
 import {
   Select,
@@ -22,7 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Spinner } from "./ui/spinner";
+import { useUser } from "@clerk/nextjs";
+import { ErrorMessage } from "./Error";
+import Loader from "./Loader";
+
 export default function LeetCodePage() {
   const [data, setData] = useState<LeetCodeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,49 +35,7 @@ export default function LeetCodePage() {
   const [randomCount, setRandomCount] = useState<number | undefined>(undefined);
   const [randomProblems, setRandomProblems] = useState<Problem[] | null>(null);
 
-  // Loads data on mount - from localStorage first, then API if needed
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Try to load from localStorage first
-        const cachedData = storage.get();
-
-        if (cachedData) {
-          console.log("Loading from localStorage cache");
-          setData(cachedData);
-          setLoading(false);
-        } else {
-          // No cache, fetch from API
-          console.log("No cache found, fetching from API");
-          const apiData = await fetchLeetCodeData();
-
-          // Ensure revisionCount exists for all problems
-          const problems = apiData.problems.map((p) => ({
-            ...p,
-            revisionCount: p.revisionCount || 0,
-          }));
-
-          const dataWithRevisions = {
-            ...apiData,
-            problems,
-          };
-
-          setData(dataWithRevisions);
-          storage.set(dataWithRevisions);
-          setLoading(false);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-        setData(null);
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
+  const { user } = useUser();
 
   // Update problem revision count
   const updateProblemrevisionCounter = (
@@ -102,11 +63,11 @@ export default function LeetCodePage() {
     };
 
     setData(updatedData);
-    storage.set(updatedData);
+    storage.set({ userId: user?.id as string, data: updatedData });
 
-    // --- Update randomProblems if active ---
+    // --- Updates randomProblems if active ---
     if (randomProblems) {
-      // Update and re-sort the randomProblems array as well
+      // Updates and re-sort the randomProblems array as well
       const updatedRandomProblems = randomProblems.map((p) =>
         p.id === problem.id ? { ...p, revisionCount: newCount } : p
       );
@@ -116,16 +77,16 @@ export default function LeetCodePage() {
     scrollToElement(problem.title);
   };
 
-  // Refresh data from API (manual refresh)
+  // Refresh data from ext API (manual refresh)
   const refreshData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const apiData = await fetchLeetCodeData();
+      const apiData = await fetchLeetCodeDataFromExt();
 
       // Merge with existing revision counts from localStorage
-      const cachedData = storage.get();
+      const cachedData = storage.get({ userId: user?.id ?? "" });
       const problems = apiData.problems.map((p) => {
         const cached = cachedData?.problems.find((cp) => cp.id === p.id);
         return {
@@ -140,7 +101,7 @@ export default function LeetCodePage() {
       };
 
       setData(dataWithRevisions);
-      storage.set(dataWithRevisions);
+      storage.set({ userId: user?.id ?? "", data: dataWithRevisions });
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -172,6 +133,64 @@ export default function LeetCodePage() {
     setSearchTerm("");
     setRandomProblems(null);
   };
+
+  const loadData = async () => {
+    try {
+      // Looking in the localStorage first
+
+      const cached = storage.get({ userId: user?.id as string });
+      if (cached) {
+        setData(cached);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      // fetching user progress if any.
+      const res = await fetchUserFromDb({ userId: user?.id as string });
+
+      if (res) {
+        const transformed: LeetCodeData = {
+          lastFetched: res.lastFetched ?? "",
+          totalSolved: res.totalSolved ?? 0,
+          filtered: res.filtered ?? undefined,
+          problems: res.problems.map((p: any) => ({
+            ...p,
+            revisionCount: p.revisionCount ?? 0,
+          })),
+        };
+
+        setData(transformed);
+        storage.set({ userId: user?.id ?? "", data: transformed });
+        setError(null);
+      } else {
+        // fetching from the extension API
+        const apiData = await fetchLeetCodeDataFromExt();
+
+        // Ensure revisionCount exists for all problems
+        const problems = apiData.problems.map((p) => ({
+          ...p,
+          revisionCount: p.revisionCount || 0,
+        }));
+
+        const dataWithRevisions = {
+          ...apiData,
+          problems,
+        };
+
+        setData(dataWithRevisions);
+        storage.set({ userId: user?.id ?? "", data: dataWithRevisions });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) loadData();
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -208,42 +227,9 @@ export default function LeetCodePage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-8 py-12">
-        {loading && (
-          <div className="flex items-center justify-center py-32">
-            <div className="text-center flex  justify-center items-center gap-4 flex-col">
-              <Spinner className="h-[10vh] w-[10vh]" />
-              <p className="text-muted-foreground font-light">
-                Loading your achievements...
-              </p>
-            </div>
-          </div>
-        )}
+        {loading && <Loader />}
 
-        {error && (
-          <div className="max-w-2xl mx-auto">
-            <div className="border border-destructive/50 rounded-lg p-6 bg-destructive/10">
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-destructive text-xs">!</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium text-foreground mb-1">
-                    Unable to load data
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-light">
-                    {error}
-                  </p>
-                  <button
-                    onClick={refreshData}
-                    className="mt-3 text-sm text-foreground hover:text-foreground/80 font-light underline underline-offset-2"
-                  >
-                    Try again
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {error && <ErrorMessage message={error} onRetry={refreshData} />}
 
         {data && !loading && stats && (
           <>

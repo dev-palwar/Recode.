@@ -8,14 +8,17 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId   String    @unique
-  email     String    @unique
-  name      String?
-  image     String?
-  problems  Problem[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId     String    @unique
+  email       String    @unique
+  name        String? // optional
+  image       String? // optional
+  problems    Problem[] // can be empty array
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  totalSolved Int? // optional numeric fields
+  lastFetched String? // optional string fields
+  filtered    Int? // optional numeric fields
 }
 
 type Problem {

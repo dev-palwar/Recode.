@@ -24,8 +24,6 @@ interface LeetCodeData {
 
 // Handle OPTIONS request for CORS preflight
 export async function OPTIONS() {
-  console.log("OPTIONS request received");
-
   return new Response(null, {
     status: 204,
     headers: {
@@ -38,8 +36,6 @@ export async function OPTIONS() {
 
 // POST - Receive data from extension
 export async function POST(request: Request) {
-  console.log("POST request received");
-
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -60,10 +56,6 @@ export async function POST(request: Request) {
     // Store data (in production, save to database)
     leetcodeData = data;
 
-    console.log(
-      `✅ Received ${data.totalSolved} solved problems from extension`
-    );
-
     return NextResponse.json(
       {
         success: true,
@@ -73,7 +65,6 @@ export async function POST(request: Request) {
       { headers }
     );
   } catch (error) {
-    console.error("❌ Error processing LeetCode data:", error);
     return NextResponse.json(
       { error: "Failed to process data" },
       { status: 500, headers }
@@ -83,8 +74,6 @@ export async function POST(request: Request) {
 
 // GET - Send data to client
 export async function GET(request: Request) {
-  console.log("GET request received");
-
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -126,7 +115,6 @@ export async function GET(request: Request) {
       { headers }
     );
   } catch (error) {
-    console.error("❌ Error fetching LeetCode data:", error);
     return NextResponse.json(
       { error: "Failed to fetch data" },
       { status: 500, headers }
