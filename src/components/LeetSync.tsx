@@ -79,34 +79,7 @@ export default function LeetCodePage() {
 
   // Refresh data from ext API (manual refresh)
   const refreshData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const apiData = await fetchLeetCodeDataFromExt();
-
-      // Merge with existing revision counts from localStorage
-      const cachedData = storage.get({ userId: user?.id ?? "" });
-      const problems = apiData.problems.map((p) => {
-        const cached = cachedData?.problems.find((cp) => cp.id === p.id);
-        return {
-          ...p,
-          revisionCount: cached?.revisionCount || 0,
-        };
-      });
-
-      const dataWithRevisions = {
-        ...apiData,
-        problems,
-      };
-
-      setData(dataWithRevisions);
-      storage.set({ userId: user?.id ?? "", data: dataWithRevisions });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
+    loadData();
   };
 
   // Client-side filtering
@@ -135,6 +108,7 @@ export default function LeetCodePage() {
   };
 
   const loadData = async () => {
+    setLoading(true);
     try {
       // Looking in the localStorage first
 
@@ -149,38 +123,19 @@ export default function LeetCodePage() {
       // fetching user progress if any.
       const res = await fetchUserFromDb({ userId: user?.id as string });
 
-      if (res) {
-        const transformed: LeetCodeData = {
-          lastFetched: res.lastFetched ?? "",
-          totalSolved: res.totalSolved ?? 0,
-          filtered: res.filtered ?? undefined,
-          problems: res.problems.map((p: any) => ({
-            ...p,
-            revisionCount: p.revisionCount ?? 0,
-          })),
-        };
-
-        setData(transformed);
-        storage.set({ userId: user?.id ?? "", data: transformed });
-        setError(null);
-      } else {
-        // fetching from the extension API
-        const apiData = await fetchLeetCodeDataFromExt();
-
-        // Ensure revisionCount exists for all problems
-        const problems = apiData.problems.map((p) => ({
+      const transformed: LeetCodeData = {
+        lastFetched: res.lastFetched ?? "",
+        totalSolved: res.totalSolved ?? 0,
+        filtered: res.filtered ?? undefined,
+        problems: res.problems.map((p: any) => ({
           ...p,
-          revisionCount: p.revisionCount || 0,
-        }));
+          revisionCount: p.revisionCount ?? 0,
+        })),
+      };
 
-        const dataWithRevisions = {
-          ...apiData,
-          problems,
-        };
-
-        setData(dataWithRevisions);
-        storage.set({ userId: user?.id ?? "", data: dataWithRevisions });
-      }
+      storage.set({ userId: user?.id ?? "", data: transformed });
+      setData(transformed);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

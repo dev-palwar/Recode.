@@ -2,9 +2,6 @@ import { currentUser } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-// In-memory storage (use database in production)
-let leetcodeData: any = null;
-
 const prisma = globalThis.prisma || new PrismaClient();
 if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
 
@@ -60,15 +57,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Store data (in production, save to database)
-    leetcodeData = data;
-
-    const res = await prisma.user.update({
+    await prisma.user.upsert({
       where: { clerkId: user?.id },
-      data: {
+      update: {
         lastFetched: data.lastFetched,
         totalSolved: data.totalSolved,
         problems: data.problems,
+      },
+      create: {
+        clerkId: user?.id as string,
+        lastFetched: data.lastFetched,
+        totalSolved: data.totalSolved,
+        problems: data.problems,
+        email: user?.primaryEmailAddress?.emailAddress ?? "",
+        name: user?.fullName,
+        image: user?.imageUrl,
       },
     });
 
@@ -83,56 +86,6 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to process data" },
-      { status: 500, headers }
-    );
-  }
-}
-
-// GET - Send data to client
-export async function GET(request: Request) {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  };
-
-  try {
-    if (!leetcodeData) {
-      return NextResponse.json(
-        {
-          error:
-            "No data available. Please import data from the extension first.",
-        },
-        { status: 404, headers }
-      );
-    }
-
-    // Optional: Filter by difficulty
-    const { searchParams } = new URL(request.url);
-    const difficulty = searchParams.get("difficulty");
-
-    let filteredProblems = leetcodeData.problems;
-
-    if (difficulty) {
-      filteredProblems = leetcodeData.problems.filter(
-        (p: Problem) => p.difficulty.toLowerCase() === difficulty.toLowerCase()
-      );
-    }
-
-    return NextResponse.json(
-      {
-        totalSolved: leetcodeData.totalSolved,
-        lastFetched: leetcodeData.lastFetched,
-        filtered: difficulty
-          ? filteredProblems.length
-          : leetcodeData.totalSolved,
-        problems: filteredProblems,
-      },
-      { headers }
-    );
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch data" },
       { status: 500, headers }
     );
   }

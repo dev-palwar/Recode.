@@ -22,6 +22,12 @@ function Header() {
     setLoading(true);
     const savedData = storage.get({ userId: user?.id });
 
+    if (!savedData) {
+      toast("There's likely nothing to be saved");
+      setLoading(false);
+      return;
+    }
+
     const payload: Prisma.UserCreateInput = {
       clerkId: user.id,
       name: user.fullName,
