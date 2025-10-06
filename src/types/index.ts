@@ -8,7 +8,7 @@ export interface Problem {
   totalAccepted: number;
   totalSubmissions: number;
   isPaidOnly: boolean;
-  revisionCounter: number; // Changed from revisionCounter to match schema
+  revisionCount: number;
 }
 
 export interface LeetCodeData {

@@ -4,6 +4,7 @@ import { Roboto, Inter } from "next/font/google"; // import Roboto
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import Header from "@/components/Header";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Inter({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
           >
             <Header />
             {children}
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>

@@ -1,7 +1,14 @@
 "use client";
 
 import LeetCodePage from "@/components/LeetSync";
-import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import {
+  SignIn,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  useUser,
+} from "@clerk/nextjs";
 import { useEffect } from "react";
 
 export default function Home() {
@@ -18,9 +25,7 @@ export default function Home() {
       <SignedOut>
         <SignInButton mode="redirect">
           <div className="h-screen flex justify-center items-center">
-            <button className="cursor-pointer w-full py-3 px-4 rounded-lg font-semibold transition duration-200">
-              Sign in with Google
-            </button>
+            <Button variant={"ghost"}>Sign in</Button>
           </div>
         </SignInButton>
       </SignedOut>

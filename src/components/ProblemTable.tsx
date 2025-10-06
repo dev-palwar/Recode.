@@ -109,7 +109,7 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({
                   <Minus className="w-4 h-4 cursor-pointer hover:text-red-400 transition-colors" />
                 </button>
                 <span className="text-foreground font-medium w-8 text-center">
-                  {problem.revisionCounter}
+                  {problem.revisionCount}
                 </span>
                 <button
                   onClick={() => onUpdaterevisionCounter(problem, "plus")}

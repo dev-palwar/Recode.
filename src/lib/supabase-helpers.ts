@@ -10,7 +10,7 @@ export interface Problem {
   totalAccepted: number;
   totalSubmissions: number;
   isPaidOnly: boolean;
-  revisionCounter: number;
+  revisionCount: number;
 }
 
 export interface User {
@@ -88,14 +88,14 @@ export async function addProblemToUser(
 export async function updateProblemrevisionCounter(
   userId: string,
   problemId: number,
-  revisionCounter: number
+  revisionCount: number
 ): Promise<boolean> {
   const userData = await getUserData(userId);
 
   if (!userData) return false;
 
   const updatedProblems = userData.problems.map((p) =>
-    p.id === problemId ? { ...p, revisionCounter } : p
+    p.id === problemId ? { ...p, revisionCount } : p
   );
 
   return updateUserProblems(userId, updatedProblems);
@@ -115,7 +115,7 @@ export async function syncLeetCodeData(
     const existing = userData.problems.find((p) => p.id === newProblem.id);
     return {
       ...newProblem,
-      revisionCounter: existing?.revisionCounter || 0,
+      revisionCount: existing?.revisionCount || 0,
     };
   });
 

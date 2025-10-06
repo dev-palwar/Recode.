@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Spinner } from "./ui/spinner";
 export default function LeetCodePage() {
   const [data, setData] = useState<LeetCodeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,10 +51,10 @@ export default function LeetCodePage() {
           console.log("No cache found, fetching from API");
           const apiData = await fetchLeetCodeData();
 
-          // Ensure revisionCounter exists for all problems
+          // Ensure revisionCount exists for all problems
           const problems = apiData.problems.map((p) => ({
             ...p,
-            revisionCounter: p.revisionCounter || 0,
+            revisionCount: p.revisionCount || 0,
           }));
 
           const dataWithRevisions = {
@@ -84,12 +85,12 @@ export default function LeetCodePage() {
 
     const newCount =
       type === "plus"
-        ? problem.revisionCounter + 1
-        : Math.max(problem.revisionCounter - 1, 0);
+        ? problem.revisionCount + 1
+        : Math.max(problem.revisionCount - 1, 0);
 
     // Update the problem in the array
     const updatedProblems = data.problems.map((p) =>
-      p.id === problem.id ? { ...p, revisionCounter: newCount } : p
+      p.id === problem.id ? { ...p, revisionCount: newCount } : p
     );
 
     // Sort by revision count (highest at bottom)
@@ -107,7 +108,7 @@ export default function LeetCodePage() {
     if (randomProblems) {
       // Update and re-sort the randomProblems array as well
       const updatedRandomProblems = randomProblems.map((p) =>
-        p.id === problem.id ? { ...p, revisionCounter: newCount } : p
+        p.id === problem.id ? { ...p, revisionCount: newCount } : p
       );
       setRandomProblems(sortProblemsByRevision(updatedRandomProblems));
     }
@@ -129,7 +130,7 @@ export default function LeetCodePage() {
         const cached = cachedData?.problems.find((cp) => cp.id === p.id);
         return {
           ...p,
-          revisionCounter: cached?.revisionCounter || 0,
+          revisionCount: cached?.revisionCount || 0,
         };
       });
 
@@ -209,8 +210,8 @@ export default function LeetCodePage() {
       <div className="max-w-7xl mx-auto px-8 py-12">
         {loading && (
           <div className="flex items-center justify-center py-32">
-            <div className="text-center">
-              <div className="inline-block w-12 h-12 border-2 border-muted border-t-foreground rounded-full animate-spin mb-4"></div>
+            <div className="text-center flex  justify-center items-center gap-4 flex-col">
+              <Spinner className="h-[10vh] w-[10vh]" />
               <p className="text-muted-foreground font-light">
                 Loading your achievements...
               </p>

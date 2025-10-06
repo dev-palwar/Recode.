@@ -8,11 +8,25 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId   String   @unique
-  email     String   @unique
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId   String    @unique
+  email     String    @unique
   name      String?
   image     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  problems  Problem[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+type Problem {
+  id               Int
+  title            String
+  titleSlug        String
+  difficulty       String
+  difficultyLevel  Int
+  acceptanceRate   Float
+  totalAccepted    Int
+  totalSubmissions Int
+  isPaidOnly       Boolean
+  revisionCount    Int?
 }

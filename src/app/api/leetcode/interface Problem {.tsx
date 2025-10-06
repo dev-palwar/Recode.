@@ -14,7 +14,7 @@ interface User {
     totalAccepted: number;
     totalSubmissions: number;
     isPaidOnly: boolean;
-    revisionCounter: number;
+    revisionCount: number;
   }[];
 }
 
@@ -28,7 +28,7 @@ interface Problem {
   totalAccepted: number;
   totalSubmissions: number;
   isPaidOnly: boolean;
-  revisionCounter: number;
+  revisionCount: number;
 }
 
 // interface user {
