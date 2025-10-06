@@ -1,7 +1,12 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 // In-memory storage (use database in production)
 let leetcodeData: any = null;
+
+const prisma = globalThis.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
 
 interface Problem {
   id: number;
@@ -42,6 +47,8 @@ export async function POST(request: Request) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 
+  const user = await currentUser();
+
   try {
     const data: LeetCodeData = await request.json();
 
@@ -55,6 +62,15 @@ export async function POST(request: Request) {
 
     // Store data (in production, save to database)
     leetcodeData = data;
+
+    const res = await prisma.user.update({
+      where: { clerkId: user?.id },
+      data: {
+        lastFetched: data.lastFetched,
+        totalSolved: data.totalSolved,
+        problems: data.problems,
+      },
+    });
 
     return NextResponse.json(
       {
