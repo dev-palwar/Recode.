@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId     String    @unique
+  email       String    @unique
+  name        String? // optional
+  image       String? // optional
+  problems    Problem[] // can be empty array
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  totalSolved Int? // optional numeric fields
+  lastFetched String? // optional string fields
+  filtered    Int? // optional numeric fields
+}
+
+type Problem {
+  id               Int
+  title            String
+  titleSlug        String
+  difficulty       String
+  difficultyLevel  Int
+  acceptanceRate   Float
+  totalAccepted    Int
+  totalSubmissions Int
+  isPaidOnly       Boolean
+  revisionCount    Int?
+}
