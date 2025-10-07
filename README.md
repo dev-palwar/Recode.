@@ -1,5 +1,10 @@
 # leetcode solved problems tracker
 
+<video width="600" controls>
+  <source src="assets/leetcode-ext-1759772622736.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 so... I made this because I kept forgetting which leetcode problems I'd already done. opening leetcode and scrolling through my submissions felt like too much effort sometimes.
 
 it's a Next.js app that tracks the problems you've solved. nothing fancy, just something that works.
