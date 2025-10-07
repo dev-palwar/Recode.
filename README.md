@@ -1,9 +1,6 @@
 # leetcode solved problems tracker
 
-<video width="600" controls>
-  <source src="https://youtu.be/RstErCUaHS0" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/9ee4fb59-15a4-4123-a1a1-9fb7f2422deb
 
 
 so... I made this because I kept forgetting which leetcode problems I'd already done. opening leetcode and scrolling through my submissions felt like too much effort sometimes.
