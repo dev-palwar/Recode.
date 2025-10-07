@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# leetcode solved problems tracker
 
-## Getting Started
+so... I made this because I kept forgetting which leetcode problems I'd already done. opening leetcode and scrolling through my submissions felt like too much effort sometimes.
 
-First, run the development server:
+it's a Next.js app that tracks the problems you've solved. nothing fancy, just something that works.
+
+## why this exists
+
+- I solve leetcode problems but my memory is terrible
+- wanted something cleaner than a text file
+- spreadsheets felt too corporate for tracking coding problems
+- figured I might as well make it look decent while I'm at it
+
+## running it locally
+
+if you want to run this for some reason:
+
+### 1. clone and install
+
+```bash
+git clone https://github.com/dev-palwar/leetcode-solved-problems-tracker.git
+cd leetcode-solved-problems-tracker
+npm install (bun if you have it)
+```
+
+### 2. set up environment variables
+
+you'll need two files for this to work:
+
+create a `.env` file in the root:
+
+```env
+DATABASE_URL="your-mongodb-atlas-url-here"
+```
+
+get your MongoDB Atlas URL from their dashboard. it's free for small projects.
+
+create a `.env.local` file:
+
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_key_here
+CLERK_SECRET_KEY=your_secret_here
+CLERK_WEBHOOK_SIGNING_SECRET=your_webhook_secret_here
+
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+```
+
+the Clerk keys come from [clerk.com](https://clerk.com) after you make an account. it handles auth so I didn't have to.
+
+### 3. run it
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+then go to `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+or use yarn/pnpm/bun if that's your thing. I'm not going to judge your package manager choices.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### You'll need one more thing to make it work
 
-## Learn More
+go to "https://github.com/dev-palwar/leetcode-extension"
 
-To learn more about Next.js, take a look at the following resources:
+- follow the instruction written there.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## tech stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js (it has servers built in)
+- MongoDB with Prisma
+- Clerk
+- Tailwind CSS
+- whatever else I needed to make it work
 
-## Deploy on Vercel
+## deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+you can deploy it on Vercel if you want. they make it pretty easy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## contributing
+
+if you find bugs or want to add features, feel free to open an issue or PR. I'll look at it when I have time.
+
+## license
+
+do whatever you want with this. if it helps you track your leetcode grind, that's cool.

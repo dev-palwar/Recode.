@@ -43,6 +43,8 @@ export async function POST(request: Request) {
   try {
     const data: LeetCodeData = await request.json();
 
+    console.log("data ", data);
+
     if (!data.totalSolved || !data.problems || !Array.isArray(data.problems)) {
       return NextResponse.json(
         { error: "Invalid data format" },
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch existing user data (if any)
+    // Fetches existing user data (if any)
     const existingUser = await prisma.user.findUnique({
       where: { clerkId: user?.id },
       select: { problems: true },
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
     // Existing problems from DB
     const existingProblems = existingUser?.problems ?? [];
 
-    // Merge logic — keep higher revisionCount and updated info
+    // Merge logic — keeps higher revisionCount and updated info
     const mergedProblems = data.problems.map((newProb) => {
       const oldProb = existingProblems.find((p) => p.id === newProb.id);
       if (oldProb) {
@@ -75,7 +77,7 @@ export async function POST(request: Request) {
       return { ...newProb, revisionCount: newProb.revisionCount ?? 0 };
     });
 
-    // Also include any old problems not present in the new data
+    // Also includes any old problems not present in the new data
     const allProblems = [
       ...mergedProblems,
       ...existingProblems.filter(
@@ -83,7 +85,6 @@ export async function POST(request: Request) {
       ),
     ];
 
-    // Upsert user
     await prisma.user.upsert({
       where: { clerkId: user?.id },
       update: {
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
       { headers }
     );
   } catch (error) {
-    console.error("Error saving data:", error);
+    console.log("Error saving data:");
     return NextResponse.json(
       { error: "Failed to process data" },
       { status: 500, headers }

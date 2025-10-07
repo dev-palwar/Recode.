@@ -9,6 +9,7 @@ import { Prisma, User } from "@prisma/client";
 import { toast } from "sonner";
 import { Spinner } from "./ui/spinner";
 import { saveUserProgress } from "@/lib/api";
+import { GithubIcon } from "lucide-react";
 
 function Header() {
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,6 @@ function Header() {
 
     if (!savedData) {
       toast("There's likely nothing to be saved");
-      setLoading(false);
       return;
     }
 
@@ -68,6 +68,12 @@ function Header() {
         </Button>
       </SignedIn>
       <ThemeToggle />
+      <a
+        target="_blank"
+        href="https://github.com/dev-palwar/leetcode-solved-problems-tracker"
+      >
+        <GithubIcon className="w-6 h-6" />
+      </a>
     </header>
   );
 }

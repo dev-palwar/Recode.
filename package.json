@@ -1,6 +1,6 @@
 {
-  "name": "lc-rvsr",
-  "version": "0.1.0",
+  "name": "revise-leetcode",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -17,8 +17,6 @@
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "idb": "^8.0.3",
-    "lodash": "^4.17.21",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "next-themes": "^0.4.6",
