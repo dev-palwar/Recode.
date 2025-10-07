@@ -137,7 +137,7 @@ export default function LeetCodePage() {
       setData(transformed);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError("Import data from the extension");
     } finally {
       setLoading(false);
     }

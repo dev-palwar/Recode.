@@ -1,3 +1,4 @@
+import { LeetCodeData } from "@/types";
 import { currentUser } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
@@ -18,12 +19,6 @@ interface Problem {
   revisionCount?: number;
 }
 
-interface LeetCodeData {
-  totalSolved: number;
-  lastFetched: string;
-  problems: Problem[];
-}
-
 // Handle OPTIONS request for CORS preflight
 export async function OPTIONS() {
   return new Response(null, {
@@ -36,7 +31,6 @@ export async function OPTIONS() {
   });
 }
 
-// POST - Receive data from extension
 export async function POST(request: Request) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -49,7 +43,6 @@ export async function POST(request: Request) {
   try {
     const data: LeetCodeData = await request.json();
 
-    // Validate data
     if (!data.totalSolved || !data.problems || !Array.isArray(data.problems)) {
       return NextResponse.json(
         { error: "Invalid data format" },
@@ -57,33 +50,70 @@ export async function POST(request: Request) {
       );
     }
 
+    // Fetch existing user data (if any)
+    const existingUser = await prisma.user.findUnique({
+      where: { clerkId: user?.id },
+      select: { problems: true },
+    });
+
+    // Existing problems from DB
+    const existingProblems = existingUser?.problems ?? [];
+
+    // Merge logic — keep higher revisionCount and updated info
+    const mergedProblems = data.problems.map((newProb) => {
+      const oldProb = existingProblems.find((p) => p.id === newProb.id);
+      if (oldProb) {
+        return {
+          ...oldProb,
+          ...newProb,
+          revisionCount: Math.max(
+            oldProb.revisionCount ?? 0,
+            newProb.revisionCount ?? 0
+          ),
+        };
+      }
+      return { ...newProb, revisionCount: newProb.revisionCount ?? 0 };
+    });
+
+    // Also include any old problems not present in the new data
+    const allProblems = [
+      ...mergedProblems,
+      ...existingProblems.filter(
+        (old) => !data.problems.some((np) => np.id === old.id)
+      ),
+    ];
+
+    // Upsert user
     await prisma.user.upsert({
       where: { clerkId: user?.id },
       update: {
         lastFetched: data.lastFetched,
         totalSolved: data.totalSolved,
-        problems: data.problems,
+        filtered: data.filtered ?? undefined,
+        problems: allProblems,
       },
       create: {
         clerkId: user?.id as string,
+        email: user?.primaryEmailAddress?.emailAddress as string,
+        name: user?.fullName ?? null,
+        image: user?.imageUrl ?? null,
         lastFetched: data.lastFetched,
         totalSolved: data.totalSolved,
-        problems: data.problems,
-        email: user?.primaryEmailAddress?.emailAddress ?? "",
-        name: user?.fullName,
-        image: user?.imageUrl,
+        filtered: data.filtered ?? undefined,
+        problems: allProblems,
       },
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: `Successfully received ${data.totalSolved} problems`,
+        message: `Merged ${data.problems.length} problems successfully.`,
         timestamp: new Date().toISOString(),
       },
       { headers }
     );
   } catch (error) {
+    console.error("Error saving data:", error);
     return NextResponse.json(
       { error: "Failed to process data" },
       { status: 500, headers }
