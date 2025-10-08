@@ -158,7 +158,7 @@ export default function LeetCodePage() {
                 LeetCode Progress
               </h1>
               <p className="text-sm text-muted-foreground font-light">
-                Your competitive programming journey
+                Your revision journey
               </p>
             </div>
             {data && (

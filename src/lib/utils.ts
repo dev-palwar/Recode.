@@ -60,9 +60,9 @@ export const scrollToElement = (elementId: string): void => {
         block: "center",
       });
 
-      el.style.border = "2px solid purple";
+      el.style.border = "2px solid white";
       el.style.borderRadius = "20px";
-      el.style.transition = "0.3s all";
+      // el.style.transition = "0.3s all";
 
       setTimeout(() => {
         el.style.border = "";

@@ -5,7 +5,11 @@ import { GithubIcon } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="relative h-screen w-screen">
+    <div
+      className={`relative h-screen w-screen bg-[url('https://i.pinimg.com/1200x/bd/f4/59/bdf4599242715d396418687aaff8433b.jpg')] bg-cover bg-center`}
+    >
+      <div className="absolute inset-0 bg-black/65"></div>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-none"></div>
       {/* GitHub Icon */}
       <a
         target="_blank"
@@ -17,32 +21,39 @@ export default function Home() {
 
       {/* Signed Out View */}
       <SignedOut>
-        <div className="h-full w-full flex flex-col justify-center items-center text-center px-4">
-          <p className="mb-2">
-            Install{" "}
-            <span className="text-purple-500 underline">
-              <a
-                target="_blank"
-                href="https://github.com/dev-palwar/leetcode-extension"
-              >
-                Extension
-              </a>
-            </span>{" "}
-            first if you haven't already.
-          </p>
-          <p className="mb-4">Read the readme on GitHub for more info.</p>
+        <div className="h-full w-full flex flex-col justify-center items-center text-center px-4 absolute">
+          <div className="absolute bottom-20">
+            <p className="mb-2 uppercase">
+              Install{" "}
+              <span className="text-amber-100 underline">
+                <a
+                  target="_blank"
+                  className="decoration-none"
+                  href="https://github.com/dev-palwar/leetcode-extension"
+                >
+                  Extension
+                </a>
+              </span>{" "}
+              first if you haven't already.
+            </p>
+            <p className="mb-4 uppercase">
+              Read the readme on GitHub for more info.
+            </p>
 
-          <SignInButton mode="redirect">
-            <Button variant="default" className="w-full max-w-xs">
-              Sign in
-            </Button>
-          </SignInButton>
+            <SignInButton mode="redirect">
+              <Button variant="outline" className="uppercase w-full max-w-xs">
+                Sign in
+              </Button>
+            </SignInButton>
+          </div>
         </div>
       </SignedOut>
 
       {/* Signed In View */}
       <SignedIn>
-        <LeetCodePage />
+        <div className="absolute inset-0">
+          <LeetCodePage />
+        </div>
       </SignedIn>
     </div>
   );

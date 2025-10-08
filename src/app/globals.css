@@ -126,3 +126,8 @@
 button {
   @apply cursor-pointer
 }
+
+
+a {
+  text-decoration: none;
+}

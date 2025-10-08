@@ -1,32 +1,32 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Roboto } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import Header from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
 
-const roboto = Roboto({
-  variable: "--font-roboto",
+const roboto = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
+  variable: "--font-roboto",
 });
 
 export const metadata: Metadata = {
-  title: "Revise leetcode",
-  description: "Revise your solved problems on leetcode",
+  title: "Revise LeetCode",
+  description: "Revise your solved problems on LeetCode",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" className={roboto.variable}>
         <link rel="icon" href="/neko.jpg" type="image/png" />
-        <body className={`$${roboto.variable} antialiased`}>
+        <body className="font-roboto antialiased">
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
