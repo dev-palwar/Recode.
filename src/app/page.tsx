@@ -23,20 +23,20 @@ export default function Home() {
       <SignedOut>
         <div className="h-full w-full flex flex-col justify-center items-center text-center px-4 absolute">
           <div className="absolute bottom-20">
-            <p className="mb-2 uppercase">
+            <p className="mb-2 uppercase px-2 bg-amber-100 text-black">
               Install{" "}
-              <span className="text-amber-100 underline">
+              <span className="text-purple-950 underline">
                 <a
                   target="_blank"
                   className="decoration-none"
-                  href="https://github.com/dev-palwar/leetcode-extension"
+                  href="https://github.com/dev-palwar/recode-leetcode-extension"
                 >
                   Extension
                 </a>
               </span>{" "}
               first if you haven't already.
             </p>
-            <p className="mb-4 uppercase bg-amber-50 text-black">
+            <p className="mb-4 uppercase">
               Read the readme on GitHub for more info.
             </p>
 
