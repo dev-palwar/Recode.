@@ -13,7 +13,7 @@ const roboto = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Revise LeetCode",
+  title: "Recode.",
   description: "Revise your solved problems on LeetCode",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={roboto.variable}>
-        <link rel="icon" href="/neko.jpg" type="image/png" />
+        <link rel="icon" href="/icon48.png" type="image/png" />
         <body className="font-roboto antialiased">
           <ThemeProvider
             attribute="class"

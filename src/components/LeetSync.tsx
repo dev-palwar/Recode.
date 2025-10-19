@@ -155,7 +155,7 @@ export default function LeetCodePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-light text-foreground tracking-tight mb-1">
-                LeetCode Progress
+                Recode.
               </h1>
               <p className="text-sm text-muted-foreground font-light">
                 Your revision journey

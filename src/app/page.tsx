@@ -36,7 +36,7 @@ export default function Home() {
               </span>{" "}
               first if you haven't already.
             </p>
-            <p className="mb-4 uppercase">
+            <p className="mb-4 uppercase bg-amber-50 text-black">
               Read the readme on GitHub for more info.
             </p>
 
