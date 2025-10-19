@@ -1,6 +1,10 @@
 # leetcode solved problems tracker
 
-https://github.com/user-attachments/assets/9ee4fb59-15a4-4123-a1a1-9fb7f2422deb
+
+
+https://github.com/user-attachments/assets/a4af664c-7039-447c-9ec1-0eb5571829c4
+
+
 
 so... I made this because I kept forgetting which leetcode problems I'd already done. opening leetcode and scrolling through my submissions felt like too much effort sometimes.
 
