@@ -13,8 +13,8 @@ export default function Home() {
       {/* GitHub Icon */}
       <a
         target="_blank"
-        href="https://github.com/dev-palwar/leetcode-solved-problems-tracker"
-        className="absolute top-4 right-4"
+        href="https://github.com/dev-palwar/Recode."
+        className="absolute top-4 right-4 z-10"
       >
         <GithubIcon className="w-6 h-6" />
       </a>
